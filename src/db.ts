@@ -36,7 +36,7 @@ async function queryMySQL<T>(q: string, ...values: any[]): Promise<T[]> {
 
 async function queryPostgreSQL<T>(q: string, ...values: any[]): Promise<T[]> {
     const connection = await getPostgresConnection();
-    return connection.query(q, values).then(({ rows }) => rows as T[]);
+    return connection.query(q, ...values).then(({ rows }) => rows as T[]);
 }
 
 async function getMySQLConnection(): Promise<MySQLConnection> {
