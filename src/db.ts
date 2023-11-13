@@ -52,6 +52,7 @@ async function getMySQLConnection(): Promise<MySQLConnection> {
             port: config.mysql.port,
             user: config.mysql.user,
             password: config.mysql.password,
+            database: config.mysql.database,
         });
     }
 
