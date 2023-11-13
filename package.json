@@ -1,10 +1,13 @@
 {
     "name": "@enpi/db-script",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "author": "Nenad Petkovic",
     "private": false,
     "license": "MIT",
     "main": "lib/index.js",
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "prepare": "npm run build",
         "build": "tsc"

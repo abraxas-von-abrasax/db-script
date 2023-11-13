@@ -31,7 +31,7 @@ export async function closeConnections() {
 
 async function queryMySQL<T>(q: string, values: any[]): Promise<T[]> {
     const connection = await getMySQLConnection();
-    return (await connection.query(q, values)) as unknown as T[];
+    return connection.query(q, values).then(res => (res?.[0] ?? []) as T[]);
 }
 
 async function queryPostgreSQL<T>(q: string, values: any[]): Promise<T[]> {
