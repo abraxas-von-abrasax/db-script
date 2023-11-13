@@ -10,7 +10,7 @@ export enum SourceType {
 let mysqlConnection: MySQLConnection | null = null;
 let postgresConnection: Pool | null = null;
 
-export async function query<T>(type: SourceType, q: string, ...values: any[]): Promise<T[]> {
+export async function query<T>(type: SourceType, q: string, values: any[]): Promise<T[]> {
     if (type === SourceType.MYSQL) {
         return queryMySQL<T>(q, values);
     }
@@ -29,14 +29,14 @@ export async function closeConnections() {
     }
 }
 
-async function queryMySQL<T>(q: string, ...values: any[]): Promise<T[]> {
+async function queryMySQL<T>(q: string, values: any[]): Promise<T[]> {
     const connection = await getMySQLConnection();
     return (await connection.query(q, values)) as unknown as T[];
 }
 
-async function queryPostgreSQL<T>(q: string, ...values: any[]): Promise<T[]> {
+async function queryPostgreSQL<T>(q: string, values: any[]): Promise<T[]> {
     const connection = await getPostgresConnection();
-    return connection.query(q, ...values).then(({ rows }) => rows as T[]);
+    return connection.query(q, values).then(({ rows }) => rows as T[]);
 }
 
 async function getMySQLConnection(): Promise<MySQLConnection> {
