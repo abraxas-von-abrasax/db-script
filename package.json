@@ -1,0 +1,20 @@
+{
+    "name": "@enpi/db-script",
+    "version": "1.0.2",
+    "author": "Nenad Petkovic",
+    "private": false,
+    "license": "MIT",
+    "main": "lib/index.js",
+    "scripts": {
+        "prepublish": "npm run build",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "mysql2": "^3.6.3",
+        "pg": "^8.11.3"
+    },
+    "devDependencies": {
+        "@types/pg": "^8.10.9",
+        "typescript": "^5.2.2"
+    }
+}
