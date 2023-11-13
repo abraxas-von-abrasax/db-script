@@ -1,6 +1,6 @@
 import { Connection as MySQLConnection, createConnection } from 'mysql2/promise';
 import { getConfig } from './config';
-import { Client as PGClient } from 'pg';
+import { Pool } from 'pg';
 
 export enum SourceType {
     MYSQL = 'mysql',
@@ -8,7 +8,7 @@ export enum SourceType {
 }
 
 let mysqlConnection: MySQLConnection | null = null;
-let postgresConnection: PGClient | null = null;
+let postgresConnection: Pool | null = null;
 
 export async function query<T>(type: SourceType, q: string, ...values: any[]): Promise<T[]> {
     if (type === SourceType.MYSQL) {
@@ -59,7 +59,7 @@ async function getMySQLConnection(): Promise<MySQLConnection> {
     return mysqlConnection;
 }
 
-async function getPostgresConnection(): Promise<PGClient> {
+async function getPostgresConnection(): Promise<Pool> {
     if (!postgresConnection) {
         const config = getConfig();
 
@@ -67,15 +67,13 @@ async function getPostgresConnection(): Promise<PGClient> {
             throw new Error('PostgreSQL connection is not set.');
         }
 
-        postgresConnection = new PGClient({
+        postgresConnection = new Pool({
             host: config.postgres.host,
             port: config.postgres.port,
             user: config.postgres.user,
             password: config.postgres.password,
             database: config.postgres.database,
         });
-
-        await postgresConnection.connect();
     }
 
     return postgresConnection;
