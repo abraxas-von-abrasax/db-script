@@ -1,3 +1,8 @@
+export enum SourceType {
+    MYSQL = 'mysql',
+    POSTGRES = 'postgres',
+}
+
 export type DatabaseConfig = {
     host: string;
     port: number;
@@ -7,11 +12,17 @@ export type DatabaseConfig = {
 };
 
 export type Payload = {
-    mysql?: DatabaseConfig;
-    postgres?: DatabaseConfig;
+    mysql?: Record<string, DatabaseConfig>;
+    postgres?: Record<string, DatabaseConfig>;
+};
+
+export type ConfigValue = {
+    type: SourceType;
+    config: DatabaseConfig;
 };
 
 export type Config = {
-    mysql: DatabaseConfig | false;
-    postgres: DatabaseConfig | false;
+    databases: {
+        [key: string]: ConfigValue;
+    }
 };

@@ -1,80 +1,87 @@
 import { Connection as MySQLConnection, createConnection } from 'mysql2/promise';
-import { getConfig } from './config';
+import { getConfigValue } from './config';
 import { Pool } from 'pg';
+import { SourceType } from './types';
 
-export enum SourceType {
-    MYSQL = 'mysql',
-    POSTGRES = 'postgres',
-}
+const mySQLConnections = new Map<string, MySQLConnection>();
+const postgresConnections = new Map<string, Pool>();
 
-let mysqlConnection: MySQLConnection | null = null;
-let postgresConnection: Pool | null = null;
+export async function query<T>(sourceKey: string, q: string, values: any[] = []): Promise<T[]> {
+    const { type } = getConfigValue(sourceKey);
+    console.log('type', type);
 
-export async function query<T>(type: SourceType, q: string, values: any[]): Promise<T[]> {
     if (type === SourceType.MYSQL) {
-        return queryMySQL<T>(q, values);
+        return queryMySQL<T>(sourceKey, q, values);
     }
-    return queryPostgreSQL<T>(q, values);
+    return queryPostgreSQL<T>(sourceKey, q, values);
 }
 
 export async function closeConnections() {
-    if (mysqlConnection) {
-        await mysqlConnection.end();
-        mysqlConnection = null;
+    for (const connection of mySQLConnections.values()) {
+        await connection.end();
     }
 
-    if (postgresConnection) {
-        await postgresConnection.end();
-        postgresConnection = null;
+    mySQLConnections.clear();
+
+    for (const connection of postgresConnections.values()) {
+        await connection.end();
     }
+
+    postgresConnections.clear();
 }
 
-async function queryMySQL<T>(q: string, values: any[]): Promise<T[]> {
-    const connection = await getMySQLConnection();
+async function queryMySQL<T>(sourceKey: string, q: string, values: any[]): Promise<T[]> {
+    const connection = await getMySQLConnection(sourceKey);
     return connection.query(q, values).then(res => (res?.[0] ?? []) as T[]);
 }
 
-async function queryPostgreSQL<T>(q: string, values: any[]): Promise<T[]> {
-    const connection = await getPostgresConnection();
+async function queryPostgreSQL<T>(sourceKey: string, q: string, values: any[]): Promise<T[]> {
+    const connection = await getPostgresConnection(sourceKey);
     return connection.query(q, values).then(({ rows }) => rows as T[]);
 }
 
-async function getMySQLConnection(): Promise<MySQLConnection> {
-    if (!mysqlConnection) {
-        const config = getConfig();
+async function getMySQLConnection(sourceKey: string): Promise<MySQLConnection> {
+    const mysqlConnection = mySQLConnections.get(sourceKey);
 
-        if (!config.mysql) {
-            throw new Error('MySQL connection is not set.');
-        }
-
-        mysqlConnection = await createConnection({
-            host: config.mysql.host,
-            port: config.mysql.port,
-            user: config.mysql.user,
-            password: config.mysql.password,
-            database: config.mysql.database,
-        });
+    if (mysqlConnection) {
+        return mysqlConnection;
     }
 
-    return mysqlConnection;
+    const { config } = getConfigValue(sourceKey);
+
+    const newConnection = await createConnection({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+    });
+
+    mySQLConnections.set(sourceKey, newConnection);
+
+    return newConnection;
 }
 
-async function getPostgresConnection(): Promise<Pool> {
-    if (!postgresConnection) {
-        const config = getConfig();
+async function getPostgresConnection(sourceKey: string): Promise<Pool> {
+    const postgresConnection = postgresConnections.get(sourceKey);
 
-        if (!config.postgres) {
-            throw new Error('PostgreSQL connection is not set.');
-        }
-
-        postgresConnection = new Pool({
-            host: config.postgres.host,
-            port: config.postgres.port,
-            user: config.postgres.user,
-            password: config.postgres.password,
-            database: config.postgres.database,
-        });
+    if (postgresConnection) {
+        return postgresConnection;
     }
 
-    return postgresConnection;
+    const { config } = getConfigValue(sourceKey);
+
+    console.log('config', config);
+
+    const newConnection = new Pool({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+    });
+
+    postgresConnections.set(sourceKey, newConnection);
+
+    return newConnection;
 }
