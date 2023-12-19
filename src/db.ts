@@ -8,7 +8,6 @@ const postgresConnections = new Map<string, Pool>();
 
 export async function query<T>(sourceKey: string, q: string, values: any[] = []): Promise<T[]> {
     const { type } = getConfigValue(sourceKey);
-    console.log('type', type);
 
     if (type === SourceType.MYSQL) {
         return queryMySQL<T>(sourceKey, q, values);
@@ -70,8 +69,6 @@ async function getPostgresConnection(sourceKey: string): Promise<Pool> {
     }
 
     const { config } = getConfigValue(sourceKey);
-
-    console.log('config', config);
 
     const newConnection = new Pool({
         host: config.host,
